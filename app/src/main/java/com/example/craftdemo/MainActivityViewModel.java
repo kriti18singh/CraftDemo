@@ -27,7 +27,7 @@ public class MainActivityViewModel extends ViewModel implements ImageRepository.
     }
 
     private void loadImages() {
-        mRepo.makeRequest("2", "20", this);
+        mRepo.makeRequest("2", "100", this);
     }
 
     @Override
