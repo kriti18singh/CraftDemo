@@ -54,7 +54,7 @@ implements OnItemClick {
             Picasso.get()
                     .load(image.getDownloadUrl())
                     .placeholder(R.drawable.ic_launcher_foreground)
-                    .resize(100, 200)
+                    .fit()
                     .into(holder.ivImage);
         } else {
             Picasso.get().load(R.drawable.ic_launcher_foreground).into(holder.ivImage);

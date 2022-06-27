@@ -30,8 +30,13 @@ public class ImageDetailActivity extends AppCompatActivity {
         if(intent != null) {
             String author = intent.getStringExtra("author");
             String url = intent.getStringExtra("url");
+            int width = intent.getIntExtra("width", 500);
+            int height = intent.getIntExtra("height", 500);
             mAuthor.setText(author);
-            Picasso.get().load(url).into(mView);
+            Picasso.get()
+                    .load(url)
+                    .resize(width, height)
+                    .into(mView);
         }
     }
 }

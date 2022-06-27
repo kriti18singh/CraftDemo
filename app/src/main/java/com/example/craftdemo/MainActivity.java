@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements ImageAdapter.OnIm
         Intent intent = new Intent(this, ImageDetailActivity.class);
         intent.putExtra("author", result.getAuthor());
         intent.putExtra("url", result.getDownloadUrl());
+        intent.putExtra("width", result.getWidth());
+        intent.putExtra("height", result.getHeight());
         startActivity(intent);
     }
 }
