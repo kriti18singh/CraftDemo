@@ -1,7 +1,9 @@
 package com.example.craftdemo.network;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
+import com.example.craftdemo.database.AppDatabase;
 import com.example.craftdemo.model.ImageResult;
 
 import java.util.List;
@@ -9,12 +11,10 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ImageRepository {
-
     private final Api mApi;
+    private final AppDatabase mDatabase;
 
     public interface RepositoryCallback<T> {
         void onComplete(List<ImageResult> list);
@@ -22,22 +22,9 @@ public class ImageRepository {
 
     private static final String TAG = ImageRepository.class.getSimpleName();
 
-    private ImageRepository() {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(Api.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        mApi = retrofit.create(Api.class);
-    }
-
-    private static ImageRepository sInstance;
-
-    public static ImageRepository getInstance() {
-        if (sInstance == null) {
-            sInstance = new ImageRepository();
-        }
-        return sInstance;
+    public ImageRepository(AppDatabase db, Api api) {
+        mApi = api;
+        mDatabase = db;
     }
 
     public void makeRequest(String page, String limit, final RepositoryCallback callback) {
@@ -47,6 +34,8 @@ public class ImageRepository {
                 Log.d(TAG, "onResponse : "+ response);
                 List<ImageResult> list = response.body();
                 callback.onComplete(list);
+
+                saveData(list);
             }
 
             @Override
@@ -54,5 +43,23 @@ public class ImageRepository {
                 Log.e(TAG, "onFailure :" + t.getMessage());
             }
         });
+    }
+
+    private void saveData(List<ImageResult> list) {
+        new SaveImagesTask(mDatabase).execute(list);
+    }
+
+    private static class SaveImagesTask extends AsyncTask<List<ImageResult>, Void, Void> {
+        private final AppDatabase mDatabase;
+
+        public SaveImagesTask(AppDatabase database) {
+            this.mDatabase = database;
+        }
+        @SafeVarargs
+        @Override
+        protected final Void doInBackground(List<ImageResult>... lists) {
+            mDatabase.imageDao().insertAll(lists[0]);
+            return null;
+        }
     }
 }

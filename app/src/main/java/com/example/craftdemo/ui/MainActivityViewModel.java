@@ -1,6 +1,8 @@
-package com.example.craftdemo;
+package com.example.craftdemo.ui;
 
+import com.example.craftdemo.database.AppDatabase;
 import com.example.craftdemo.model.ImageResult;
+import com.example.craftdemo.network.Api;
 import com.example.craftdemo.network.ImageRepository;
 
 import java.util.List;
@@ -10,12 +12,16 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class MainActivityViewModel extends ViewModel implements ImageRepository.RepositoryCallback {
+    public MutableLiveData<List<ImageResult>> getList() {
+        return mList;
+    }
+
     private MutableLiveData<List<ImageResult>> mList;
 
-    private ImageRepository mRepo;
+    private final ImageRepository mRepo;
 
-    public MainActivityViewModel(ImageRepository mRepo) {
-        this.mRepo = mRepo;
+    public MainActivityViewModel(AppDatabase db, Api api) {
+        this.mRepo = new ImageRepository(db, api);
     }
 
     public LiveData<List<ImageResult>> getImages() {
