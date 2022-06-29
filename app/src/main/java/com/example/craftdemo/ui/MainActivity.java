@@ -1,6 +1,5 @@
 package com.example.craftdemo.ui;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -9,14 +8,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import com.example.craftdemo.CompositionRoot;
 import com.example.craftdemo.CustomApplication;
 import com.example.craftdemo.R;
 import com.example.craftdemo.model.ImageResult;
+import com.example.craftdemo.model.NetworkResponse;
 import com.example.craftdemo.ui.adapter.ImageAdapter;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements ImageAdapter.OnImageClickListener {
 
@@ -36,6 +37,14 @@ public class MainActivity extends AppCompatActivity implements ImageAdapter.OnIm
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(),2);
         mMainView.setLayoutManager(layoutManager);
 
+        mImageAdapter = new ImageAdapter(
+                MainActivity.this,
+                new ArrayList<>(),
+                MainActivity.this,
+                getCompositionRoot().getConnectivityManager(),
+                getCompositionRoot().getPicasso());
+        mMainView.setAdapter(mImageAdapter);
+
         MainActivityViewModel model = new ViewModelProvider(
                 this,
                 new MainActivityViewModelFactory(
@@ -44,13 +53,35 @@ public class MainActivity extends AppCompatActivity implements ImageAdapter.OnIm
                         getCompositionRoot().getConnectivityManager()
                 )).get(MainActivityViewModel.class);
 
-        model.getImages().observe(this, new Observer<List<ImageResult>>() {
+        model.getImages().observe(this, new Observer<NetworkResponse>() {
             @Override
-            public void onChanged(@Nullable List<ImageResult> imageList) {
-                mImageAdapter = new ImageAdapter( MainActivity.this, imageList, MainActivity.this);
-                mMainView.setAdapter(mImageAdapter);
+            public void onChanged(NetworkResponse networkResponse) {
+                if (networkResponse != null) {
+                    consumeResponse(networkResponse);
+                }
             }
         });
+    }
+
+    private void consumeResponse(NetworkResponse networkResponse) {
+        switch (networkResponse.responseStatus) {
+            case SUCCESS: {
+                mImageAdapter.setList(networkResponse.data);
+                mImageAdapter.notifyDataSetChanged();
+                break;
+            }
+            case ERROR: {
+                showErrorToast();
+                break;
+            }
+            default:
+                break;
+
+        }
+    }
+
+    private void showErrorToast() {
+        Toast.makeText(this, "ERROR loading images", Toast.LENGTH_LONG).show();
     }
 
     @Override

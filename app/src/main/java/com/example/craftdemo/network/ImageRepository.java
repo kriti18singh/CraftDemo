@@ -6,6 +6,8 @@ import android.util.Log;
 
 import com.example.craftdemo.database.AppDatabase;
 import com.example.craftdemo.model.ImageResult;
+import com.example.craftdemo.model.NetworkResponse;
+import com.example.craftdemo.model.ResponseStatus;
 import com.example.craftdemo.utils.NetworkStatus;
 
 import java.util.List;
@@ -20,7 +22,7 @@ public class ImageRepository {
     private final ConnectivityManager mConnectivityManager;
 
     public interface RepositoryCallback<T> {
-        void onComplete(List<ImageResult> list);
+        void onComplete(NetworkResponse response);
     }
 
     private static final String TAG = ImageRepository.class.getSimpleName();
@@ -37,7 +39,12 @@ public class ImageRepository {
             public void onResponse(Call<List<ImageResult>> call, Response<List<ImageResult>> response) {
                 Log.d(TAG, "onResponse : "+ response);
                 List<ImageResult> list = response.body();
-                callback.onComplete(list);
+                NetworkResponse networkResponse = new NetworkResponse(
+                        ResponseStatus.SUCCESS,
+                        list,
+                        null
+                );
+                callback.onComplete(networkResponse);
 
                 saveData(list);
             }
@@ -45,6 +52,12 @@ public class ImageRepository {
             @Override
             public void onFailure(Call<List<ImageResult>> call, Throwable t) {
                 Log.e(TAG, "onFailure :" + t.getMessage());
+                NetworkResponse networkResponse = new NetworkResponse(
+                        ResponseStatus.ERROR,
+                        null,
+                        t
+                );
+                callback.onComplete(networkResponse);
             }
         });
     }
@@ -92,7 +105,7 @@ public class ImageRepository {
         @Override
         protected void onPostExecute(List<ImageResult> listData) {
             super.onPostExecute(listData);
-            mCallback.onComplete(listData);
+            //mCallback.onComplete(listData);
         }
     }
 }

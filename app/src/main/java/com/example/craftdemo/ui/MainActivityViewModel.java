@@ -3,11 +3,10 @@ package com.example.craftdemo.ui;
 import android.net.ConnectivityManager;
 
 import com.example.craftdemo.database.AppDatabase;
-import com.example.craftdemo.model.ImageResult;
+import com.example.craftdemo.model.NetworkResponse;
+import com.example.craftdemo.model.ResponseStatus;
 import com.example.craftdemo.network.Api;
 import com.example.craftdemo.network.ImageRepository;
-
-import java.util.List;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -16,11 +15,7 @@ import androidx.lifecycle.ViewModel;
 public class MainActivityViewModel extends ViewModel implements ImageRepository.RepositoryCallback {
     private static final String TAG = MainActivityViewModel.class.getSimpleName();
 
-    public MutableLiveData<List<ImageResult>> getList() {
-        return mList;
-    }
-
-    private MutableLiveData<List<ImageResult>> mList;
+    private MutableLiveData<NetworkResponse> responseMutableLiveData;
 
     private final ImageRepository mRepo;
 
@@ -28,22 +23,29 @@ public class MainActivityViewModel extends ViewModel implements ImageRepository.
         this.mRepo = new ImageRepository(db, api, manager);
     }
 
-    public LiveData<List<ImageResult>> getImages() {
-        if (mList == null) {
-            mList = new MutableLiveData<>();
+    public LiveData<NetworkResponse> getImages() {
+        if (responseMutableLiveData == null) {
+            responseMutableLiveData = new MutableLiveData<>();
             loadImagesFromRepo();
         }
-        return mList;
+        return responseMutableLiveData;
     }
 
     private void loadImagesFromRepo() {
-        //TODO: remove gard coded values
+        //TODO: remove hard coded values
         mRepo.loadImages("2", "100", this);
     }
 
     @Override
-    public void onComplete(List list) {
-        mList.setValue(list);
+    public void onComplete(NetworkResponse response) {
+        if(response.responseStatus == ResponseStatus.SUCCESS) {
+            responseMutableLiveData.postValue(
+                    NetworkResponse.success(response.data)
+            );
+        } else if(response.responseStatus == ResponseStatus.ERROR) {
+            responseMutableLiveData.postValue(
+                    NetworkResponse.error(new Throwable(response.error))
+            );
+        }
     }
 }
-
