@@ -1,5 +1,7 @@
 package com.example.craftdemo.ui;
 
+import android.net.ConnectivityManager;
+
 import com.example.craftdemo.database.AppDatabase;
 import com.example.craftdemo.model.ImageResult;
 import com.example.craftdemo.network.Api;
@@ -12,6 +14,8 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class MainActivityViewModel extends ViewModel implements ImageRepository.RepositoryCallback {
+    private static final String TAG = MainActivityViewModel.class.getSimpleName();
+
     public MutableLiveData<List<ImageResult>> getList() {
         return mList;
     }
@@ -20,20 +24,21 @@ public class MainActivityViewModel extends ViewModel implements ImageRepository.
 
     private final ImageRepository mRepo;
 
-    public MainActivityViewModel(AppDatabase db, Api api) {
-        this.mRepo = new ImageRepository(db, api);
+    public MainActivityViewModel(AppDatabase db, Api api, ConnectivityManager manager) {
+        this.mRepo = new ImageRepository(db, api, manager);
     }
 
     public LiveData<List<ImageResult>> getImages() {
         if (mList == null) {
             mList = new MutableLiveData<>();
-            loadImages();
+            loadImagesFromRepo();
         }
         return mList;
     }
 
-    private void loadImages() {
-        mRepo.makeRequest("2", "100", this);
+    private void loadImagesFromRepo() {
+        //TODO: remove gard coded values
+        mRepo.loadImages("2", "100", this);
     }
 
     @Override

@@ -40,7 +40,8 @@ public class MainActivity extends AppCompatActivity implements ImageAdapter.OnIm
                 this,
                 new MainActivityViewModelFactory(
                         getCompositionRoot().getDatabase(),
-                        getCompositionRoot().getImagesApi()
+                        getCompositionRoot().getImagesApi(),
+                        getCompositionRoot().getConnectivityManager()
                 )).get(MainActivityViewModel.class);
 
         model.getImages().observe(this, new Observer<List<ImageResult>>() {

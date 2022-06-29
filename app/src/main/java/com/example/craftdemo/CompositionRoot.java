@@ -1,6 +1,8 @@
 package com.example.craftdemo;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 import com.example.craftdemo.database.AppDatabase;
 import com.example.craftdemo.network.Api;
@@ -14,6 +16,7 @@ public class CompositionRoot {
 
     private Retrofit mRetrofit;
     private AppDatabase mDatabase;
+    private ConnectivityManager mConnectivityManager;
     private final Context mContext;
 
     public CompositionRoot(CustomApplication customApplication) {
@@ -44,5 +47,13 @@ public class CompositionRoot {
                     .build();
         }
         return mRetrofit;
+    }
+
+    public ConnectivityManager getConnectivityManager() {
+        if(mConnectivityManager == null) {
+            mConnectivityManager = (ConnectivityManager) mContext
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+        }
+        return mConnectivityManager;
     }
 }

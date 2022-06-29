@@ -1,10 +1,12 @@
 package com.example.craftdemo.network;
 
+import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.craftdemo.database.AppDatabase;
 import com.example.craftdemo.model.ImageResult;
+import com.example.craftdemo.utils.NetworkStatus;
 
 import java.util.List;
 
@@ -15,6 +17,7 @@ import retrofit2.Response;
 public class ImageRepository {
     private final Api mApi;
     private final AppDatabase mDatabase;
+    private final ConnectivityManager mConnectivityManager;
 
     public interface RepositoryCallback<T> {
         void onComplete(List<ImageResult> list);
@@ -22,12 +25,13 @@ public class ImageRepository {
 
     private static final String TAG = ImageRepository.class.getSimpleName();
 
-    public ImageRepository(AppDatabase db, Api api) {
+    public ImageRepository(AppDatabase db, Api api, ConnectivityManager manager) {
         mApi = api;
         mDatabase = db;
+        mConnectivityManager = manager;
     }
 
-    public void makeRequest(String page, String limit, final RepositoryCallback callback) {
+    private void makeRequest(String page, String limit, final RepositoryCallback callback) {
         mApi.getImages(page, limit).enqueue(new Callback<List<ImageResult>>() {
             @Override
             public void onResponse(Call<List<ImageResult>> call, Response<List<ImageResult>> response) {
@@ -45,6 +49,14 @@ public class ImageRepository {
         });
     }
 
+    public void loadImages(String page, String limit, final RepositoryCallback callback) {
+        if(!NetworkStatus.getInstance().isOnline(mConnectivityManager)) {
+            //load from db
+            new LoadImagesTask(mDatabase, callback).execute();
+        }
+        else makeRequest(page, limit, callback);
+    }
+
     private void saveData(List<ImageResult> list) {
         new SaveImagesTask(mDatabase).execute(list);
     }
@@ -60,6 +72,27 @@ public class ImageRepository {
         protected final Void doInBackground(List<ImageResult>... lists) {
             mDatabase.imageDao().insertAll(lists[0]);
             return null;
+        }
+    }
+
+    private static class LoadImagesTask extends AsyncTask<Void, Void, List<ImageResult>> {
+        private final AppDatabase mDatabase;
+        private final RepositoryCallback mCallback;
+
+        public LoadImagesTask(AppDatabase database, RepositoryCallback callback) {
+            mDatabase = database;
+            mCallback = callback;
+        }
+
+        @Override
+        protected List<ImageResult> doInBackground(Void... voids) {
+            return mDatabase.imageDao().getAll();
+        }
+
+        @Override
+        protected void onPostExecute(List<ImageResult> listData) {
+            super.onPostExecute(listData);
+            mCallback.onComplete(listData);
         }
     }
 }
