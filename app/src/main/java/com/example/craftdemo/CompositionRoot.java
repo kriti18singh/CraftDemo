@@ -2,11 +2,12 @@ package com.example.craftdemo;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 
 import com.example.craftdemo.database.AppDatabase;
 import com.example.craftdemo.network.Api;
 import com.example.craftdemo.utils.Constants;
+import com.squareup.picasso.Picasso;
+
 
 import androidx.room.Room;
 import retrofit2.Retrofit;
@@ -18,6 +19,7 @@ public class CompositionRoot {
     private AppDatabase mDatabase;
     private ConnectivityManager mConnectivityManager;
     private final Context mContext;
+    private Picasso mPicasso;
 
     public CompositionRoot(CustomApplication customApplication) {
         mContext = customApplication;
@@ -55,5 +57,18 @@ public class CompositionRoot {
                     .getSystemService(Context.CONNECTIVITY_SERVICE);
         }
         return mConnectivityManager;
+    }
+
+    public Picasso getPicasso() {
+        if(mPicasso == null) {
+            Picasso.Builder builder = new Picasso.Builder(mContext);
+            //builder.downloader(okHttp3Downloader);
+            Picasso picasso = builder.build();
+            picasso.setIndicatorsEnabled(true);
+            picasso.setLoggingEnabled(true);
+            Picasso.setSingletonInstance(picasso);
+            mPicasso = picasso;
+        }
+        return mPicasso;
     }
 }
